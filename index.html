@@ -37,7 +37,7 @@
             });
         });
 
-        // 核心逻辑 1：生成带盐的暗号，并让发起人一键直达聊天室
+        // 核心逻辑 1：生成带盐的暗号，并自动填充到加入输入框中
         function generateSaltedRoom() {
             const base = document.getElementById('base-room-input').value.trim();
             if(!base) return alert('请输入基础暗号');
@@ -49,14 +49,12 @@
             }
             const finalRoom = `${base}#${salt}`;
             
-            // 1. 把生成的暗号显示在文本框里，方便发起人复制发给朋友
+            // 1. 在绿色的展示区显示，方便你随时长按复制发给朋友
             document.getElementById('final-room-display').value = finalRoom;
             document.getElementById('salt-result-area').classList.remove('hidden');
             
-            // 2. ✨【核心改动】让发起人无需复制粘贴，直接带着这个新暗号进入聊天室！
-            setTimeout(() => {
-                joinRoom(finalRoom);
-            }, 800); // 延迟 0.8 秒进入，给用户留一点点“看到暗号并产生掌控感”的视觉时间
+            // 2. ✨【核心改动】自动把暗号塞进“加入现有空间”的输入框里
+            document.getElementById('join-room-input').value = finalRoom;
         }
 
         // 核心逻辑 2：加入房间
