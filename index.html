@@ -11,22 +11,23 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
-        /* 1. 强行解决老系统 Safari 视口高度毒瘤，让 7P - 17PM 高度全部统一收合 */
+        /* 1. 完美收合高度，让 7P - 17PM 视口高度全部统一 */
         html, body {
             height: 100vh;
             height: -webkit-fill-available;
         }
-        #entrance-screen, #chat-screen {
-            height: 100% !important;
+        /* 2. 仅对当前处于“非隐藏状态”的屏幕进行高度规范，绝不冲突隐藏逻辑 */
+        #entrance-screen:not(.hidden), #chat-screen:not(.hidden) {
+            height: 100%;
             display: flex;
             flex-direction: column;
         }
-        /* 2. 强行阻断老系统 Safari 的拉伸 Bug，把聊天区域牢牢锁死在屏幕中间 */
+        /* 3. 强锁中间聊天框高度，彻底阻断老 Safari 内核的拉伸 Bug */
         #chat-box {
             flex: 1 1 0% !important;
             min-height: 0 !important;
-            height: 0 !important; /* 迫使旧内核计算真实剩余高度 */
-            -webkit-overflow-scrolling: touch; /* 让老 iPhone 滚动像原生 App 一样丝滑 */
+            height: 0 !important; 
+            -webkit-overflow-scrolling: touch; 
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
