@@ -173,6 +173,30 @@
             }]);
         }
 
+        // ✨【新加功能】点击顶部房间名，一键复制暗号到剪贴板
+        function copyCurrentRoom() {
+            const roomTitle = document.getElementById('current-room-title').innerText;
+            if (!roomTitle || roomTitle === '房间号') return;
+        
+            // 使用现代浏览器通用的剪贴板 API
+            navigator.clipboard.writeText(roomTitle).then(() => {
+                // 动态改变一下文字，给用户一个“复制成功”的视觉反馈
+                const originalTitle = roomTitle;
+                document.getElementById('current-room-title').innerText = '✅ 已复制暗号';
+                document.getElementById('current-room-title').classList.remove('text-cyan-400');
+                document.getElementById('current-room-title').classList.add('text-green-400');
+        
+                // 1秒后恢复原样
+                setTimeout(() => {
+                    document.getElementById('current-room-title').innerText = originalTitle;
+                    document.getElementById('current-room-title').classList.remove('text-green-400');
+                    document.getElementById('current-room-title').classList.add('text-cyan-400');
+                }, 1000);
+            }).catch(err => {
+                alert('复制失败，请手动复制');
+            });
+        }
+
         // 模拟发送图片/视频/语音链接（由于纯前端无服务器，这里采用输入链接或模拟方式，后续可扩展Supabase Storage）
         function triggerMediaMock(type) {
             const url = prompt(`请输入要发送的 ${type} 文件的互联网URL地址 (例如 https://xxx.com/abc.png) :`);
@@ -282,7 +306,9 @@
     <div id="chat-screen" class="hidden flex-1 flex flex-col justify-between overflow-hidden">
         <div class="bg-zinc-900 border-b border-zinc-800 px-4 pt-12 pb-3 flex items-center justify-between">
             <button onclick="quitRoom()" class="text-zinc-400 text-sm active:text-white flex items-center gap-1">← 列表</button>
-            <span id="current-room-title" class="text-xs font-mono text-zinc-400 max-w-[60%] truncate">房间号</span>
+            <span id="current-room-title" class="font-bold text-cyan-400 cursor-pointer active:opacity-70" onclick="copyCurrentRoom()" title="点击复制暗号">
+                房间号
+            </span>
             <button onclick="loadTodayMessages()" class="text-cyan-400 text-sm active:scale-95">🔄</button>
         </div>
 
