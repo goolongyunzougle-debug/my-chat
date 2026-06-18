@@ -87,7 +87,7 @@
             myNickname = document.getElementById('nickname-input').value.trim();
             if(!roomID || !myNickname) return alert('请输入暗号和你的昵称');
             
-            // ✨【核心修复】一进函数，先下手为强，把聊天框里的陈年老数据全部擦干净！
+            // 进门先扫地：清空聊天消息框
             document.getElementById('chat-box').innerHTML = '';
             
             localStorage.setItem('db_nickname', myNickname);
@@ -96,10 +96,19 @@
             currentRoom = roomID;
             document.getElementById('current-room-title').innerText = currentRoom;
             
-            // 切换到聊天主界面（此时聊天框是绝对干净的纯黑背景）
+            // 切换到聊天主界面
             document.getElementById('entrance-screen').classList.add('hidden');
             document.getElementById('chat-screen').classList.remove('hidden');
             
+            // ✨【核心新加】进入房间的同时，顺手把首页大厅的所有暗号痕迹抹除（保留昵称）
+            document.getElementById('base-room-input').value = '';   // 清空“制造新空间”输入框
+            document.getElementById('final-room-display').value = ''; // 清空“加盐后的暗号”展示框
+            document.getElementById('join-room-input').value = '';    // 清空“加入现有空间”输入框
+            
+            // 如果你的加盐结果区域有一个单独的 class="hidden" 控制显示/隐藏，也可以顺手把它重新藏起来：
+            const saltArea = document.getElementById('salt-result-area');
+            if (saltArea) saltArea.classList.add('hidden');
+        
             // 加载历史记录（仅限当天）
             await loadTodayMessages();
             
