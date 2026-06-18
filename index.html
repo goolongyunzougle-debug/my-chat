@@ -87,13 +87,16 @@
             myNickname = document.getElementById('nickname-input').value.trim();
             if(!roomID || !myNickname) return alert('请输入暗号和你的昵称');
             
+            // ✨【核心修复】一进函数，先下手为强，把聊天框里的陈年老数据全部擦干净！
+            document.getElementById('chat-box').innerHTML = '';
+            
             localStorage.setItem('db_nickname', myNickname);
             saveRoomToHistory(roomID);
             
             currentRoom = roomID;
             document.getElementById('current-room-title').innerText = currentRoom;
             
-            // 切换到聊天主界面
+            // 切换到聊天主界面（此时聊天框是绝对干净的纯黑背景）
             document.getElementById('entrance-screen').classList.add('hidden');
             document.getElementById('chat-screen').classList.remove('hidden');
             
