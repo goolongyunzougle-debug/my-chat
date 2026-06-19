@@ -63,6 +63,10 @@
         function generateSaltedRoom() {
             const base = document.getElementById('base-room-input').value.trim();
             if(!base) return alert('请输入基础暗号');
+
+            // 🚀 【在这里也加上清洗代码】
+            // 确保生成的源头就是绝对干净的
+            base = base.replace(/[\s\u200b-\u200d\uFEFF]/g, '');
             
             const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let salt = '';
@@ -83,6 +87,10 @@
         async function joinRoom(roomID) {
             if(!roomID) {
                 roomID = document.getElementById('join-room-input').value.trim();
+            }
+            // 强力剥离所有空格、零宽空格、不可见格式符
+            if(roomID) {
+                roomID = roomID.replace(/[\s\u200b-\u200d\uFEFF]/g, '');
             }
             myNickname = document.getElementById('nickname-input').value.trim();
             if(!roomID || !myNickname) return alert('请输入暗号和你的昵称');
