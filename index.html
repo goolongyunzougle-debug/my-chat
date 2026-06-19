@@ -61,7 +61,7 @@
 
         // 核心逻辑 1：生成带盐的暗号，并自动填充到加入输入框中
         function generateSaltedRoom() {
-            const base = document.getElementById('base-room-input').value.trim();
+            let base = document.getElementById('base-room-input').value.trim();
             if(!base) return alert('请输入基础暗号');
 
             // 🚀 【在这里也加上清洗代码】
