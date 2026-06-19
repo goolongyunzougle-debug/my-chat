@@ -94,18 +94,20 @@
             saveRoomToHistory(roomID);
             
             currentRoom = roomID;
+            // ✨【新加】在本地存一份当前正在活动的房间，防止断网刷新丢失
+            localStorage.setItem('db_current_active_room', currentRoom); 
+            
             document.getElementById('current-room-title').innerText = currentRoom;
             
             // 切换到聊天主界面
             document.getElementById('entrance-screen').classList.add('hidden');
             document.getElementById('chat-screen').classList.remove('hidden');
             
-            // ✨【核心新加】进入房间的同时，顺手把首页大厅的所有暗号痕迹抹除（保留昵称）
-            document.getElementById('base-room-input').value = '';   // 清空“制造新空间”输入框
-            document.getElementById('final-room-display').value = ''; // 清空“加盐后的暗号”展示框
-            document.getElementById('join-room-input').value = '';    // 清空“加入现有空间”输入框
+            // 进入房间的同时，顺手把首页大厅的所有暗号痕迹抹除（保留昵称）
+            document.getElementById('base-room-input').value = '';   
+            document.getElementById('final-room-display').value = ''; 
+            document.getElementById('join-room-input').value = '';    
             
-            // 如果你的加盐结果区域有一个单独的 class="hidden" 控制显示/隐藏，也可以顺手把它重新藏起来：
             const saltArea = document.getElementById('salt-result-area');
             if (saltArea) saltArea.classList.add('hidden');
         
@@ -118,17 +120,32 @@
 
         // 核心逻辑 3：只加载当天的数据
         async function loadTodayMessages() {
+            // ✨【核心修复】如果因为换网刷新导致 currentRoom 空了，去备份里拉一把
+            if (!currentRoom) {
+                currentRoom = localStorage.getItem('db_current_active_room') || '';
+            }
+            
+            // 如果连备份都没有，说明是真的退出了，直接不执行
+            if (!currentRoom) return;
+            
+            // 顺手把顶部的房间名重新校准回来，防止它显示“房间号”三个字
+            document.getElementById('current-room-title').innerText = currentRoom;
+        
             const todayStart = new Date();
             todayStart.setHours(0,0,0,0);
-
+        
             const { data, error } = await supabaseClient
                 .from('messages')
                 .select('*')
                 .eq('room_id', currentRoom)
                 .gte('created_at', todayStart.toISOString())
                 .order('created_at', { ascending: true });
-
-            if (error) console.error(error);
+        
+            if (error) {
+                console.error(error);
+                alert('同步失败，请检查当前 Wi-Fi 是否能正常联网');
+                return;
+            }
             
             const box = document.getElementById('chat-box');
             box.innerHTML = '';
@@ -258,9 +275,26 @@
 
         function quitRoom() {
             if(activeChannel) activeChannel.unsubscribe();
+            // ✨【新加】主动点退出时，把当前房间的隐形备份彻底销毁，不留痕迹
+            localStorage.removeItem('db_current_active_room');
+            currentRoom = '';
+            
             document.getElementById('chat-screen').classList.add('hidden');
             document.getElementById('entrance-screen').classList.remove('hidden');
         }
+
+        // ✨【自动救砖】换网断连后，自动唤醒并对齐数据
+        window.addEventListener('online', async () => {
+            // 尝试找回房间
+            if (!currentRoom) {
+                currentRoom = localStorage.getItem('db_current_active_room') || '';
+            }
+            if (currentRoom) {
+                document.getElementById('chat-box').innerHTML = '';
+                await loadTodayMessages();
+                listenToRoom(); // 基于新网络重新绑定实时通道
+            }
+        });
     </script>
 </head>
 <body class="bg-zinc-950 text-zinc-100 font-sans select-none overflow-hidden h-screen w-screen flex flex-col justify-between antialiased">
