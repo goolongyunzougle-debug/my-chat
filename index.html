@@ -252,7 +252,7 @@
                 // 4. 上传到 Supabase Storage
                 const { data, error } = await supabaseClient
                     .storage
-                    .from('CHAT-MEDIA')
+                    .from('chat-media')
                     .upload(fileName, file, {
                         cacheControl: '3600',
                         upsert: true
@@ -263,7 +263,7 @@
                 // 5. 拿到公开公网 URL
                 const { data: { publicUrl } } = supabaseClient
                     .storage
-                    .from('CHAT-MEDIA')
+                    .from('chat-media')
                     .getPublicUrl(fileName);
         
                 // 6. 发送消息类型为 image
