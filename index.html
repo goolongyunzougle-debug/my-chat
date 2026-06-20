@@ -228,9 +228,57 @@
             if(url) sendMsg(type, url);
         }
 
+
+        // 图片压缩（最长边1280px，约300KB~1MB）
+        async function compressImage(file, maxWidth = 1280, quality = 0.8) {
+            if (!file.type.startsWith('image/')) return file;
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let {width,height}=img;
+                        if(width>height && width>maxWidth){
+                            height=Math.round(height*maxWidth/width); width=maxWidth;
+                        }else if(height>maxWidth){
+                            width=Math.round(width*maxWidth/height); height=maxWidth;
+                        }
+                        const canvas=document.createElement('canvas');
+                        canvas.width=width; canvas.height=height;
+                        canvas.getContext('2d').drawImage(img,0,0,width,height);
+                        canvas.toBlob(blob=>{
+                            if(!blob){ resolve(file); return; }
+                            resolve(new File([blob], file.name,{
+                                type:'image/jpeg',
+                                lastModified:Date.now()
+                            }));
+                        },'image/jpeg',quality);
+                    };
+                    img.src=e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function previewImage(url){
+            let overlay=document.getElementById('image-preview-overlay');
+            if(!overlay){
+                overlay=document.createElement('div');
+                overlay.id='image-preview-overlay';
+                overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;z-index:99999';
+                overlay.innerHTML='<img id="preview-img" style="max-width:95vw;max-height:95vh;border-radius:10px"><button style="position:absolute;top:20px;right:20px;font-size:30px;background:none;border:none;color:#fff;cursor:pointer">×</button>';
+                overlay.onclick=(e)=>{ if(e.target===overlay || e.target.tagName==="BUTTON") overlay.remove(); };
+                document.body.appendChild(overlay);
+            }else{
+                document.body.appendChild(overlay);
+            }
+            overlay.querySelector("#preview-img").src=url;
+        }
+
+
         // ✨【完美稳固版】手机相册/相机照片上传逻辑
         async function uploadAndSendImage(inputElement) {
-            const file = inputElement.files?.[0];
+            let file = inputElement.files?.[0];
             if (!file) return;
         
             // 1. 限制大小 5MB
@@ -239,6 +287,8 @@
                 return;
             }
         
+            file = await compressImage(file);
+
             // 2. 精准获取按钮，给出上传状态提示
             const btn = document.getElementById('upload-image-btn');
             const originalBtnText = btn ? btn.innerText : "🖼️ 拍照/发图";
@@ -321,7 +371,7 @@
             if(msg.msg_type === 'text') {
                 mediaContent = `<p class="break-all">${msg.content}</p>`;
             } else if(msg.msg_type === 'image') {
-                mediaContent = `<img src="${msg.content}" class="max-w-[200px] rounded-lg border border-zinc-700" onclick="window.open('${msg.content}')" />`;
+                mediaContent = `<img src="${msg.content}" class="max-w-[200px] rounded-lg border border-zinc-700" onclick="previewImage('${msg.content}')" />`;
             } else if(msg.msg_type === 'audio') {
                 mediaContent = `<audio src="${msg.content}" controls class="max-w-[240px]"></audio>`;
             } else if(msg.msg_type === 'video') {
