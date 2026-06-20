@@ -228,6 +228,56 @@
             if(url) sendMsg(type, url);
         }
 
+        // ✨【全新升级】真正的手机相册/相机照片上传逻辑
+        async function uploadAndSendImage(inputElement) {
+            const file = inputElement.files[0];
+            if (!file) return;
+        
+            // 1. 限制一下图片大小，防止手机高像素照片太大，撑爆免费额度 (限制 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('照片太大了，请发送 5MB 以内的照片');
+                return;
+            }
+        
+            // 先给用户一个“正在发送”的微弱视觉提示
+            const originalBtnText = document.querySelector("button[onclick*='image-file-input']").innerText;
+            document.querySelector("button[onclick*='image-file-input']").innerText = "⏳ 上传中...";
+        
+            try {
+                // 2. 构造一个绝对唯一的纯随机文件名，防止多人在同一房间发相同文件名导致覆盖
+                const fileExt = file.name.split('.').pop() || 'jpg';
+                const fileName = `${currentRoom}/${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+        
+                // 3. 呼叫 Supabase Storage 把文件推上云端
+                const { data, error } = await supabaseClient
+                    .storage
+                    .from('chat-media')
+                    .upload(fileName, file, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+        
+                if (error) throw error;
+        
+                // 4. 拿到公网可访问的图片绝对 URL 地址
+                const { data: { publicUrl } } = supabaseClient
+                    .storage
+                    .from('chat-media')
+                    .getPublicUrl(fileName);
+        
+                // 5. 调用原本的发送消息功能，把类型设为 image，内容为图片网址
+                await sendMsg('image', publicUrl);
+        
+            } catch (err) {
+                console.error('上传失败:', err);
+                alert('照片发送失败，请确认你在第一步里是否创建了叫 chat-media 且开启了 Public 的桶');
+            } finally {
+                // 恢复按钮文字，清空选择器，方便下一次拍照
+                document.querySelector("button[onclick*='image-file-input']").innerText = originalBtnText;
+                inputElement.value = '';
+            }
+        }
+
         // 辅助：历史记录管理
         function saveRoomToHistory(room) {
             let rooms = JSON.parse(localStorage.getItem('db_rooms') || '[]');
@@ -359,7 +409,8 @@
 
         <div class="bg-zinc-900 border-t border-zinc-800 p-4 pb-safe flex flex-col gap-3">
             <div class="flex gap-4 text-xs text-zinc-400 border-b border-zinc-800 pb-2">
-                <button onclick="triggerMediaMock('image')" class="active:text-cyan-400">🖼️ 发图片</button>
+                <button onclick="document.getElementById('image-file-input').click()" class="active:text-cyan-400">🖼️ 拍照/发图</button>
+                <input id="image-file-input" type="accept" accept="image/*" class="hidden" onchange="uploadAndSendImage(this)">
                 <button onclick="triggerMediaMock('audio')" class="active:text-cyan-400">🎙️ 发语音</button>
                 <button onclick="triggerMediaMock('video')" class="active:text-cyan-400">📹 发视频</button>
             </div>
