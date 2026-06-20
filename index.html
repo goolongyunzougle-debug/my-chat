@@ -252,7 +252,7 @@
                 // 4. 上传到 Supabase Storage
                 const { data, error } = await supabaseClient
                     .storage
-                    .from('chat-media')
+                    .from('CHAT-MEDIA')
                     .upload(fileName, file, {
                         cacheControl: '3600',
                         upsert: false
@@ -263,7 +263,7 @@
                 // 5. 拿到公开公网 URL
                 const { data: { publicUrl } } = supabaseClient
                     .storage
-                    .from('chat-media')
+                    .from('CHAT-MEDIA')
                     .getPublicUrl(fileName);
         
                 // 6. 发送消息类型为 image
@@ -271,7 +271,7 @@
         
             } catch (err) {
                 console.error('上传失败:', err);
-                alert('照片发送失败，请确认你在后台是否创建了叫 chat-media 且开启了 Public（公开）的存储桶');
+                alert('照片发送失败，请确认你在后台是否创建了叫 CHAT-MEDIA 且开启了 Public（公开）的存储桶');
             } finally {
                 // 7. 稳稳恢复按钮状态，并清空选择器
                 if (btn) btn.innerText = originalBtnText;
