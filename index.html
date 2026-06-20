@@ -230,7 +230,7 @@
 
         // ✨【完美稳固版】手机相册/相机照片上传逻辑
         async function uploadAndSendImage(inputElement) {
-            const file = inputElement.files[0];
+            const file = inputElement.files?.[0];
             if (!file) return;
         
             // 1. 限制大小 5MB
@@ -245,9 +245,17 @@
             if (btn) btn.innerText = "⏳ 上传中...";
         
             try {
-                // 3. 构造唯一的纯随机文件名
-                const fileExt = file.name.split('.').pop() || 'jpg';
-                const fileName = `${currentRoom}/${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+                
+                // 3. 构造唯一文件名（与房间号无关）
+                const fileExt =
+                (file.type.split('/')[1] || 'jpg')
+                    .replace('jpeg', 'jpg');
+                
+                const uniqueId =
+                    (crypto.randomUUID ? crypto.randomUUID() :
+                    `${Date.now()}-${Math.random().toString(36).slice(2,10)}`);
+                
+                const fileName = `${Date.now()}-${uniqueId}.${fileExt}`;
         
                 // 4. 上传到 Supabase Storage
                 const { data, error } = await supabaseClient
@@ -255,7 +263,7 @@
                     .from('chat-media')
                     .upload(fileName, file, {
                         cacheControl: '3600',
-                        upsert: true
+                        upsert: false
                     });
         
                 if (error) throw error;
@@ -265,7 +273,9 @@
                     .storage
                     .from('chat-media')
                     .getPublicUrl(fileName);
-        
+
+                console.log(publicUrl);
+                
                 // 6. 发送消息类型为 image
                 await sendMsg('image', publicUrl);
         
