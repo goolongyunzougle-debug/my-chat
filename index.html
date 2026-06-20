@@ -271,7 +271,7 @@
         
             } catch (err) {
                 console.error('上传失败:', err);
-                alert('照片发送失败，请确认你在后台是否创建了叫 CHAT-MEDIA 且开启了 Public（公开）的存储桶',err.message);
+                alert(err.message);
             } finally {
                 // 7. 稳稳恢复按钮状态，并清空选择器
                 if (btn) btn.innerText = originalBtnText;
